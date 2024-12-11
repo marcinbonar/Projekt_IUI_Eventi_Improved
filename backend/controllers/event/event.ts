@@ -87,7 +87,7 @@ class Event {
       const { eventId, userId } = req.params;
 
       const user = await UserData.findById(userId);
-      const event = await EventData.findOne({ eventId: eventId });
+      const event = await EventData.findById(eventId);
 
       if (!user || !event) {
         return res.status(400).send({ message: ALERTS.INVALID_DATA });
@@ -116,7 +116,7 @@ class Event {
         return res.status(400).send({ message: 'Stripe token is required' });
       }
 
-      const event = await EventData.findOne({ eventId: eventId });
+      const event = await EventData.findById(eventId);
       const user = await UserData.findById(userId);
 
       if (!user || !event) {
@@ -143,6 +143,9 @@ class Event {
 
       await ticket.save();
 
+      user.tickets.push(ticket._id);
+      await user.save();
+
       event.availableTickets -= 1;
       event.soldTickets += 1;
       event.attendees.push(user._id);
@@ -157,16 +160,12 @@ class Event {
 
   async signUpForEventAndSetPendingPayment(req: Request, res: Response, next: NextFunction) {
     try {
-      console.log('Żądanie odebrane:', req.body);
-      // Pobierz userId i eventId z body żądania
       const { userId, eventId } = req.body;
 
-      // Sprawdź, czy userId i eventId są poprawnymi ObjectId
       if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(eventId)) {
         return res.status(400).send({ message: 'Invalid userId or eventId format' });
       }
 
-      // Znajdź użytkownika i wydarzenie na podstawie ich _id
       const user = await UserData.findById(userId);
       const event = await EventData.findById(eventId);
 
@@ -174,13 +173,11 @@ class Event {
         return res.status(400).send({ message: 'Invalid user or event' });
       }
 
-      // Sprawdź, czy użytkownik już jest zapisany na wydarzenie
       const existingTicket = await TicketData.findOne({ event: event._id, user: user._id });
       if (existingTicket) {
         return res.status(400).send({ message: 'User already signed up for this event' });
       }
 
-      // Utwórz nowy bilet
       const ticket = new TicketData({
         ticketId: new mongoose.Types.ObjectId().toHexString(),
         event: event._id,
@@ -190,19 +187,17 @@ class Event {
 
       await ticket.save();
 
-      // Dodaj identyfikator biletu do tablicy tickets użytkownika
       user.tickets.push(ticket._id);
       await user.save();
 
-      // Dodaj użytkownika do listy uczestników wydarzenia
       event.attendees.push(user._id);
       await event.save();
 
       res.status(200).send({
-        message: 'Zapisano na wydarzenie z płątnością biletu przy w kasach ma miejscu ',
+        message: 'Zapisano na wydarzenie z płatnością biletu przy w kasach ma miejscu ',
       });
     } catch (error) {
-      console.error(error); // Logowanie błędów dla debugowania
+      console.error(error);
       res.status(500).send({ message: 'Internal Server Error' });
     }
   }
@@ -217,35 +212,29 @@ class Event {
 
       const user = await UserData.findById(_id).populate({
         path: 'tickets',
-        populate: { path: 'event' }, // Upewnij się, że to odnosi się do poprawnej kolekcji EventData
+        populate: { path: 'event' },
       });
-
-      console.log('user', user);
 
       if (!user) {
         return res.status(404).send({ message: 'User not found' });
       }
 
       if (!user.tickets || user.tickets.length === 0) {
-        return res.status(200).send([]); // Zwróć pustą tablicę, jeśli użytkownik nie ma biletów
+        return res.status(200).send([]);
       }
 
-      // Przetwórz bilety i dodaj status płatności do wydarzeń
       const eventsWithPaymentStatus = user.tickets
         .map((ticket: any) => {
-          // Obsłuż sytuację, gdy event jest null lub nie istnieje
           if (!ticket.event) {
             return null;
           }
 
-          // Skonwertuj dokument wydarzenia na obiekt i dodaj status płatności
           const event = ticket.event.toObject();
           event.paymentStatus = ticket.paymentStatus;
           return event;
         })
-        .filter(event => event !== null); // Usuń null z tablicy
+        .filter(event => event !== null);
 
-      // Zwróć wydarzenia z dodanym statusem płatności
       res.status(200).send(eventsWithPaymentStatus);
     } catch (error) {
       console.error('error', error);
@@ -255,22 +244,30 @@ class Event {
 
   async getUsersWithEvents(req: Request, res: Response, next: NextFunction) {
     try {
-      const users = await UserData.find().populate({
+      const populatedUsers = await UserData.find().populate({
         path: 'tickets',
         populate: { path: 'event' },
       });
 
-      const usersWithEvents = users.map((user: any) => ({
-        userId: user.userId,
-        email: user.email,
-        events: user.tickets.map((ticket: any) => ({
-          event: ticket.event,
-          paymentStatus: ticket.paymentStatus,
-        })),
+      const usersWithEvents = populatedUsers.map((user: any) => ({
+        role: user.role || '',
+        userId: user._id?.toString() || '',
+        email: user.email || '',
+        events: user.tickets
+          ? user.tickets.map((ticket: any) => {
+              const event = ticket.event?.toObject ? ticket.event.toObject() : ticket.event;
+              return {
+                _id: event?._id?.toString() || '',
+                title: event?.title || '',
+                paymentStatus: ticket.paymentStatus || 'Nieznany',
+              };
+            })
+          : [],
       }));
 
       res.status(200).send(usersWithEvents);
     } catch (error) {
+      console.error('Błąd w getUsersWithEvents:', error);
       res.status(500).send({ message: ALERTS.INTERNAL_SERVER_ERROR });
     }
   }
@@ -279,8 +276,8 @@ class Event {
     try {
       const events = await EventData.find();
       const eventsWithSoldTicketsCount = events.map(event => ({
-        title: event.title,
-        soldTickets: event.soldTickets,
+        eventName: event.title,
+        soldTicketsCount: event.soldTickets,
       }));
       res.status(200).send(eventsWithSoldTicketsCount);
     } catch (error) {
@@ -290,7 +287,9 @@ class Event {
 
   async getRecommendations(req: Request, res: Response, next: NextFunction) {
     try {
+      console.log('Tak jestem w funkcji');
       const { userId: _id } = req.params;
+      console.log('userID', _id);
 
       if (!isValidObjectId(_id)) {
         return res.status(400).send({ message: 'Nieprawidłowy format ID użytkownika' });
@@ -307,7 +306,9 @@ class Event {
         .filter((event: any) => event !== null);
 
       if (userEvents.length === 0) {
-        return res.status(400).send({ message: 'Użytkownik nie ma zapisanych wydarzeń' });
+        return res.status(200).send({
+          message: 'Użytkownik nie ma zapisanych wydarzeń eee',
+        });
       }
 
       const allEvents = await getAllEvents();
@@ -319,7 +320,10 @@ class Event {
       );
 
       if (availableEvents.length === 0) {
-        return res.status(200).send({ message: 'Brak nowych wydarzeń do polecenia' });
+        return res.status(200).send({
+          message: 'Brak nowych wydarzeń do polecenia',
+          recommendations: [],
+        });
       }
 
       const userEventsDescriptions = prepareUserEventsDescriptions(userEvents);

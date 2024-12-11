@@ -11,6 +11,7 @@ ${availableEventsData}
 Wybierz 4 najbardziej pasujących wydarzeń z dostępnych wydarzeń i zwróć je w formacie JSON, z następującymi polami dla każdego wydarzenia:
 
 {
+  "_id": "_id danego wydarzenia"
   "title": "Tytuł wydarzenia" (pobierz z danych wydarzenia),
   "description": "Opis wydarzenia" (pobierz z danych wydarzenia),
   "image": "URL do obrazu" (pobierz z danych wydarzenia),

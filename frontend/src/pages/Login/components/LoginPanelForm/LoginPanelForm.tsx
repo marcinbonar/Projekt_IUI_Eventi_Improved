@@ -1,7 +1,6 @@
 import {
   Box,
   Button,
-  Center, Flex,
   FormControl,
   FormErrorMessage,
   FormLabel,
@@ -36,7 +35,7 @@ const clientId = '585109083788-bqv3hnp30p2idpa54no8edgfi70f1q7b.apps.googleuserc
 
 const LoginPanelForm: FC = () => {
   const navigate = useNavigate();
-  const [loginUser] = useLoginUserMutation();
+  const [loginUser, { isLoading }] = useLoginUserMutation();
   const { toastError } = useApplicationToast();
   const dispatch = useDispatch();
   const [loginUserByGoogle] = useLoginUserByGoogleMutation();
@@ -45,17 +44,12 @@ const LoginPanelForm: FC = () => {
     try {
       const idToken = res?.tokenId;
       if (idToken) {
-        const response:any = await loginUserByGoogle({ idToken }).unwrap();
+        const response: any = await loginUserByGoogle({ idToken }).unwrap();
         const { token } = response;
-        console.log("token",token)
-        // Zapisz token do sessionStorage
         sessionStorage.setItem('authorization', token);
 
-        // Dekoduj token i wyciągnij informacje o użytkowniku
         const decoded: any = jwtDecode(token);
-        console.log("decoded", decoded)
 
-        // Zapisz szczegóły użytkownika
         sessionStorage.setItem(
           'userDetails',
           JSON.stringify({
@@ -66,10 +60,11 @@ const LoginPanelForm: FC = () => {
           })
         );
 
+        sessionStorage.setItem('userId', decoded.userId);
+
         dispatch(setUserId(decoded.userId));
         dispatch(setUserDetails(decoded));
-          console.log("decoded.role",decoded.role)
-        // Nawigacja w zależności od roli
+
         if (decoded.role === 'ADMIN') {
           navigate(ROUTE_CONSTANTS.DASHBOARD_ADMIN);
         } else {
@@ -83,8 +78,6 @@ const LoginPanelForm: FC = () => {
       });
     }
   };
-
-
 
   const handleGoogleFailure = (res: any) => {
     if (res.error === 'popup_closed_by_user') {
@@ -112,14 +105,14 @@ const LoginPanelForm: FC = () => {
     resolver: yupResolver(loginSchema),
   });
 
-  const onSubmit: SubmitHandler<FormData> = async (data) => {
+  const onSubmit: SubmitHandler<FormData> = async data => {
     try {
-      const response:any = await loginUser(data).unwrap();
+      const response: any = await loginUser(data).unwrap();
       const { token } = response;
 
       sessionStorage.setItem('authorization', token);
 
-      const decoded:any= jwtDecode(token);
+      const decoded: any = jwtDecode(token);
 
       sessionStorage.setItem(
         'userDetails',
@@ -130,15 +123,15 @@ const LoginPanelForm: FC = () => {
           role: decoded.role,
         })
       );
+      sessionStorage.setItem('userId', decoded.userId);
+
+      console.log('userId', sessionStorage.getItem('userId'));
 
       dispatch(setUserId(decoded.userId));
       dispatch(setUserDetails(decoded));
-
-      if (decoded.role === 'ADMIN') {
-        navigate(ROUTE_CONSTANTS.DASHBOARD_ADMIN);
-      } else {
-        navigate(ROUTE_CONSTANTS.DASHBOARD);
-      }
+      navigate(
+        decoded.role === 'ADMIN' ? ROUTE_CONSTANTS.DASHBOARD_ADMIN : ROUTE_CONSTANTS.DASHBOARD
+      );
     } catch (error: any) {
       toastError({
         title: 'Błąd logowania',
@@ -159,35 +152,31 @@ const LoginPanelForm: FC = () => {
   return (
     <Stack spacing={8} mx={'auto'} maxW={'lg'} py={12} px={6}>
       <Stack align={'center'} />
-      <Box
-        rounded={'lg'}
-        bg={useColorModeValue('white', 'gray.700')}
-        boxShadow={'lg'}
-        p={8}
-      >
+      <Box rounded={'lg'} bg={useColorModeValue('white', 'gray.700')} boxShadow={'lg'} p={8}>
         <form onSubmit={handleSubmit(onSubmit)}>
           <Heading color={'black'} fontSize={'4xl'} mb={4}>
             Zaloguj się do aplikacji
           </Heading>
           <Text fontSize={'lg'} color={'black'} align={'center'} mb={4}>
-            Bo życie to chwile które należy pamiętać
+            Bo życie to chwile, które należy pamiętać
           </Text>
           <Stack spacing={4}>
-            <FormControl id='email' isInvalid={!!errors.email}>
+            <FormControl id="email" isInvalid={!!errors.email}>
               <FormLabel>Email </FormLabel>
-              <Input {...register('email')} type='email' />
+              <Input {...register('email')} type="email" />
               <FormErrorMessage>{errors.email?.message}</FormErrorMessage>
             </FormControl>
-            <FormControl id='password' isInvalid={!!errors.password}>
+            <FormControl id="password" isInvalid={!!errors.password}>
               <FormLabel>Hasło</FormLabel>
-              <Input {...register('password')} type='password' />
+              <Input {...register('password')} type="password" />
               <FormErrorMessage>{errors.password?.message}</FormErrorMessage>
             </FormControl>
             <Stack spacing={6}>
               <Button
-                type='submit'
+                type="submit"
                 bg={'blue.400'}
                 color={'white'}
+                isLoading={isLoading}
                 _hover={{
                   bg: 'blue.500',
                 }}
@@ -195,8 +184,8 @@ const LoginPanelForm: FC = () => {
                 Zaloguj się
               </Button>
               <Button
-                variant='outline'
-                colorScheme='blue'
+                variant="outline"
+                colorScheme="blue"
                 _hover={{ bg: 'blue.50' }}
                 onClick={handleRegisterClick}
               >
@@ -212,7 +201,7 @@ const LoginPanelForm: FC = () => {
             onFailure={handleGoogleFailure}
             cookiePolicy={'single_host_origin'}
             prompt="select_account"
-            render={(renderProps) => (
+            render={renderProps => (
               <Button
                 onClick={renderProps.onClick}
                 disabled={renderProps.disabled}

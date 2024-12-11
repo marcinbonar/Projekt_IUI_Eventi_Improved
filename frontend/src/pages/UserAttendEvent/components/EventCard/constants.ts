@@ -1,15 +1,15 @@
-export type STATUS_TYPE = 'PAID_ONLINE' | 'PAID_OFFLINE' | 'PENDING_OFFLINE_PAYMENT'
+export type STATUS_TYPE = 'PAID_ONLINE' | 'PAID_OFFLINE' | 'PENDING_OFFLINE_PAYMENT';
 
 export const statuses = {
-  'PAID_ONLINE': {
+  PAID_ONLINE: {
     paymentStatusText: 'Zapłacono online',
     paymentStatusColor: 'green',
   },
-  'PAID_OFFLINE': {
-    paymentStatusText: 'Zapłacono offline',
+  PAID_OFFLINE: {
+    paymentStatusText: 'Zapłacono w kiosku/kasie',
     paymentStatusColor: 'green',
   },
-  'PENDING_OFFLINE_PAYMENT': {
+  PENDING_OFFLINE_PAYMENT: {
     paymentStatusText: 'Nie zapłacono',
     paymentStatusColor: 'red',
   },

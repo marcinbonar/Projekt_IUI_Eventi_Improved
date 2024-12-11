@@ -1,5 +1,21 @@
+import React, { FC, useState } from 'react';
 import {
-  Button, FormControl, FormErrorMessage, FormLabel,
+  Button,
+  FormControl,
+  FormErrorMessage,
+  FormLabel,
+  Box,
+  Flex,
+  Stack,
+  Image,
+  Heading,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalHeader,
+  ModalOverlay,
+  Text,
 } from '@chakra-ui/react';
 import {
   CardCvcElement,
@@ -8,8 +24,6 @@ import {
   useElements,
   useStripe,
 } from '@stripe/react-stripe-js';
-import { useForm } from 'react-hook-form';
-import React, { FC } from 'react';
 
 import useApplicationToast from '../../../../hooks/useApplicationToast';
 import { usePayWithStripeMutation } from '../../../../redux/event/eventsApi';
@@ -23,33 +37,39 @@ interface CheckoutFormProps {
 const CheckoutForm: FC<CheckoutFormProps> = ({ eventId, userId, closeStripeModal }) => {
   const stripe = useStripe();
   const elements = useElements();
-  const [payWithStripe, { isLoading: isPaymentLoading }] =
-    usePayWithStripeMutation();
+  const [payWithStripe, { isLoading: isPaymentLoading }] = usePayWithStripeMutation();
   const { toastError, toastSuccess } = useApplicationToast();
 
-  const {
-    handleSubmit,
-    formState: { errors },
-  } = useForm<FormData>();
+  const [isModalOpen, setIsModalOpen] = useState(true);
+  const [cardError, setCardError] = useState<string | null>(null);
 
-  const onSubmit = async () => {
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
     if (!stripe || !elements || !userId || !eventId) return;
-    const cardNumberElement = elements.getElement(CardNumberElement);
-    const cardExpiryElement = elements.getElement(CardExpiryElement);
-    const cardCvcElement = elements.getElement(CardCvcElement);
-    if (!cardNumberElement || !cardExpiryElement || !cardCvcElement) return;
 
+    const cardNumberElement = elements.getElement(CardNumberElement);
+    if (!cardNumberElement) return;
 
     try {
-      const { token } = await stripe.createToken(
-        cardNumberElement,
-      );
-      if (!token) return;
+      const { token, error } = await stripe.createToken(cardNumberElement);
+
+      if (error) {
+        setCardError(error.message || 'Wystąpił błąd podczas tworzenia tokenu');
+        return;
+      }
+
+      if (!token) {
+        setCardError('Nie udało się uzyskać tokenu płatności');
+        return;
+      }
+
       await payWithStripe({
         userId,
         eventId,
         stripeToken: token.id,
       }).unwrap();
+
       closeStripeModal();
       toastSuccess({
         title: 'Zapłacono',
@@ -58,48 +78,125 @@ const CheckoutForm: FC<CheckoutFormProps> = ({ eventId, userId, closeStripeModal
     } catch (error: any) {
       toastError({
         title: 'Wystąpił błąd',
-        description: 'Sproboj ponownie później',
+        description: 'Spróbuj ponownie później',
       });
     }
+  };
+
+  const handleClose = () => {
+    setIsModalOpen(false);
+    closeStripeModal();
   };
 
   if (!eventId || !userId) return null;
 
   return (
-    <>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        {/*eslint-disable-next-line @typescript-eslint/ban-ts-comment*/}
-        {/*@ts-ignore*/}
-        <FormControl id='card' isInvalid={!!errors.card}>
-          <FormLabel>Numer carty</FormLabel>
-          <CardNumberElement />
-          {/*eslint-disable-next-line @typescript-eslint/ban-ts-comment*/}
-          {/*@ts-ignore*/}
-          <FormErrorMessage>{errors.card?.message}</FormErrorMessage>
-        </FormControl>
-        {/*eslint-disable-next-line @typescript-eslint/ban-ts-comment*/}
-        {/*@ts-ignore*/}
-        <FormControl id='date' isInvalid={!!errors.date}>
-          <FormLabel>Data ważności: </FormLabel>
-          <CardExpiryElement />
-          {/*eslint-disable-next-line @typescript-eslint/ban-ts-comment*/}
-          {/*@ts-ignore*/}
-          <FormErrorMessage>{errors.card?.date}</FormErrorMessage>
-        </FormControl>
-        {/*eslint-disable-next-line @typescript-eslint/ban-ts-comment*/}
-        {/*@ts-ignore*/}
-        <FormControl id='cvc' isInvalid={!!errors.cvc}>
-          <FormLabel>CVC: </FormLabel>
-          <CardCvcElement />
-          {/*eslint-disable-next-line @typescript-eslint/ban-ts-comment*/}
-          {/*@ts-ignore*/}
-          <FormErrorMessage>{errors.card?.cvc}</FormErrorMessage>
-        </FormControl>
-        <Button type='submit' disabled={!stripe || isPaymentLoading} isLoading={isPaymentLoading}>
-          Zapłać
-        </Button>
-      </form>
-    </>
+    <Modal isOpen={isModalOpen} onClose={handleClose} isCentered size="md">
+      <ModalOverlay />
+      <ModalContent borderRadius="md" overflow="hidden">
+        <ModalCloseButton />
+        <Box bg="teal.500" color="white" py={6} textAlign="center">
+          <Image
+            src="https://logos-world.net/wp-content/uploads/2022/12/Stripe-Emblem.png"
+            alt="Stripe Logo"
+            mx="auto"
+            mb={2}
+            height="50px"
+          />
+          <Heading as="h2" size="lg">
+            Płatność kartą
+          </Heading>
+        </Box>
+        <ModalBody padding={6}>
+          <form onSubmit={onSubmit}>
+            <Stack spacing={4}>
+              <FormControl isInvalid={!!cardError}>
+                <FormLabel>Numer karty</FormLabel>
+                <Box padding="2" border="1px solid" borderColor="gray.300" borderRadius="md">
+                  <CardNumberElement
+                    options={{
+                      style: {
+                        base: {
+                          fontSize: '16px',
+                          color: '#424770',
+                          letterSpacing: '0.025em',
+                          fontFamily: 'Roboto, Open Sans, Segoe UI, sans-serif',
+                          '::placeholder': {
+                            color: '#aab7c4',
+                          },
+                        },
+                        invalid: {
+                          color: '#9e2146',
+                        },
+                      },
+                    }}
+                  />
+                </Box>
+              </FormControl>
+              <Flex justifyContent="space-between">
+                <FormControl width="48%">
+                  <FormLabel>Data ważności</FormLabel>
+                  <Box padding="2" border="1px solid" borderColor="gray.300" borderRadius="md">
+                    <CardExpiryElement
+                      options={{
+                        style: {
+                          base: {
+                            fontSize: '16px',
+                            color: '#424770',
+                            letterSpacing: '0.025em',
+                            fontFamily: 'Roboto, Open Sans, Segoe UI, sans-serif',
+                            '::placeholder': {
+                              color: '#aab7c4',
+                            },
+                          },
+                          invalid: {
+                            color: '#9e2146',
+                          },
+                        },
+                      }}
+                    />
+                  </Box>
+                </FormControl>
+                <FormControl width="48%">
+                  <FormLabel>CVC</FormLabel>
+                  <Box padding="2" border="1px solid" borderColor="gray.300" borderRadius="md">
+                    <CardCvcElement
+                      options={{
+                        style: {
+                          base: {
+                            fontSize: '16px',
+                            color: '#424770',
+                            letterSpacing: '0.025em',
+                            fontFamily: 'Roboto, Open Sans, Segoe UI, sans-serif',
+                            '::placeholder': {
+                              color: '#aab7c4',
+                            },
+                          },
+                          invalid: {
+                            color: '#9e2146',
+                          },
+                        },
+                      }}
+                    />
+                  </Box>
+                </FormControl>
+              </Flex>
+              {cardError && <FormErrorMessage>{cardError}</FormErrorMessage>}
+              <Button
+                type="submit"
+                colorScheme="teal"
+                width="100%"
+                disabled={!stripe || isPaymentLoading}
+                isLoading={isPaymentLoading}
+                mt={4}
+              >
+                Zapłać
+              </Button>
+            </Stack>
+          </form>
+        </ModalBody>
+      </ModalContent>
+    </Modal>
   );
 };
 

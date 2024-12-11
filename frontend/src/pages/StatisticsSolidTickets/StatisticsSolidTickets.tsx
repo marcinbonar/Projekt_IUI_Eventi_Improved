@@ -1,5 +1,5 @@
 import { Box, Center, Heading, Spinner } from '@chakra-ui/react';
-import React, { useEffect } from 'react';
+import React, { FC, useEffect } from 'react';
 import { Bar } from 'react-chartjs-2';
 
 import SideBarForAdmin from '../../components/SideBar/SideBarForAdmin';
@@ -7,23 +7,21 @@ import { useGetSolidTicketsForEventsQuery } from '../../redux/event/eventsApi';
 import { EventNameAndSoldTicketsCount } from '../../types/EventNameAndSoldTicketsCount';
 import { chartOptions } from './constants';
 
-const StatisticsSolidTickets: React.FC = () => {
+const StatisticsSolidTickets: FC = () => {
   const { data, refetch } = useGetSolidTicketsForEventsQuery();
+
+  console.log('data', data);
 
   useEffect(() => {
     refetch();
   }, []);
 
   const chartData = {
-    labels:
-      data?.map((event: EventNameAndSoldTicketsCount) => event.eventName) || [],
+    labels: data?.map((event: EventNameAndSoldTicketsCount) => event.eventName) || [],
     datasets: [
       {
         label: 'Liczba sprzedanych biletów',
-        data:
-          data?.map(
-            (event: EventNameAndSoldTicketsCount) => event.soldTicketsCount
-          ) || [],
+        data: data?.map((event: EventNameAndSoldTicketsCount) => event.soldTicketsCount) || [],
         backgroundColor: (context: any) => {
           const chart = context.chart;
           const { ctx, chartArea } = chart;
@@ -32,12 +30,7 @@ const StatisticsSolidTickets: React.FC = () => {
             return null;
           }
 
-          const gradient = ctx.createLinearGradient(
-            0,
-            chartArea.bottom,
-            0,
-            chartArea.top
-          );
+          const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
           gradient.addColorStop(0, 'rgba(75, 192, 192, 0.2)');
           gradient.addColorStop(1, 'rgba(75, 192, 192, 1)');
 

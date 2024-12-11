@@ -30,12 +30,12 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
   const { colorMode, toggleColorMode } = useColorMode();
   const dispatch = useDispatch();
   //const userId = useSelector((state: RootState) => state.user.userId);
-  const userDetailsString=sessionStorage.getItem('userDetails')
+  const userDetailsString = sessionStorage.getItem('userDetails');
   const userDetails = JSON.parse(userDetailsString!);
 
   const handleLogout = () => {
-    dispatch(clearUserId()); // Wyczyść stan userId
-    sessionStorage.removeItem('userId')
+    dispatch(clearUserId());
+    sessionStorage.removeItem('userId');
     navigate(ROUTE_CONSTANTS.LOGIN);
   };
 
@@ -65,11 +65,7 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
         </Button>
         <Flex alignItems={'center'}>
           <Menu>
-            <MenuButton
-              py={2}
-              transition="all 0.3s"
-              _focus={{ boxShadow: 'none' }}
-            >
+            <MenuButton py={2} transition="all 0.3s" _focus={{ boxShadow: 'none' }}>
               <HStack>
                 <VStack
                   display={{ base: 'none', md: 'flex' }}
@@ -77,7 +73,10 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
                   spacing="1px"
                   ml="2"
                 >
-                  <Text fontSize="sm"> {userDetails.name} {userDetails.surname}</Text>
+                  <Text fontSize="sm">
+                    {' '}
+                    {userDetails.name} {userDetails.surname}
+                  </Text>
                   <Text fontSize="xs" color="gray.600">
                     {userDetails.email}
                   </Text>

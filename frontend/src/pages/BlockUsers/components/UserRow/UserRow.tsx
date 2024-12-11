@@ -1,5 +1,5 @@
 import { Button, HStack, Td, Tr } from '@chakra-ui/react';
-import React, { FC } from 'react';
+import React, { FC, useState, useEffect } from 'react';
 
 import useApplicationToast from '../../../../hooks/useApplicationToast';
 import { UserRowProps } from './types';
@@ -13,10 +13,16 @@ const UserRow: FC<UserRowProps> = ({
   onUnblock,
 }) => {
   const { toastError, toastSuccess } = useApplicationToast();
+  const [isBlocked, setIsBlocked] = useState(isBlockedProp);
+
+  useEffect(() => {
+    setIsBlocked(isBlockedProp); // Synchronizuj lokalny stan z wartością początkową
+  }, [isBlockedProp]);
 
   const handleBlock = async () => {
     try {
       await onBlock();
+      setIsBlocked(true); // Zaktualizuj lokalny stan
       toastSuccess({
         title: 'Status',
         description: 'Użytkownik został zablokowany',
@@ -32,6 +38,7 @@ const UserRow: FC<UserRowProps> = ({
   const handleUnblock = async () => {
     try {
       await onUnblock();
+      setIsBlocked(false); // Zaktualizuj lokalny stan
       toastSuccess({
         title: 'Status',
         description: 'Użytkownik został odblokowany',
@@ -48,22 +55,15 @@ const UserRow: FC<UserRowProps> = ({
       <Td>{email}</Td>
       <Td>
         <HStack spacing={4}>
-          <Button
-            size="sm"
-            onClick={handleBlock}
-            colorScheme="red"
-            disabled={isBlockedProp}
-          >
-            Zablokuj
-          </Button>
-          <Button
-            size="sm"
-            onClick={handleUnblock}
-            colorScheme="blue"
-            disabled={!isBlockedProp}
-          >
-            Odblokuj
-          </Button>
+          {isBlocked ? (
+            <Button size="sm" onClick={handleUnblock} colorScheme="teal">
+              Odblokuj
+            </Button>
+          ) : (
+            <Button size="sm" onClick={handleBlock} colorScheme="red">
+              Zablokuj
+            </Button>
+          )}
         </HStack>
       </Td>
     </Tr>

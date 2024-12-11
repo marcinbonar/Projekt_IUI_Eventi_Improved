@@ -7,7 +7,8 @@ import {
   Stack,
   Text,
   VStack,
-  useColorModeValue, useDisclosure,
+  useColorModeValue,
+  useDisclosure,
 } from '@chakra-ui/react';
 import React, { FC, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -41,6 +42,8 @@ const EventCard: FC<EventCardProps> = ({ event }) => {
 
   const handleSignUpToEvent = async () => {
     try {
+      console.log('userId', userId);
+      console.log('eventId', eventId);
       if (userId && eventId) {
         const response = await signUpToEvent({ userId, eventId }).unwrap();
         toastSuccess({
@@ -111,14 +114,7 @@ const EventCard: FC<EventCardProps> = ({ event }) => {
             </Text>
           )}
         </Stack>
-        <Button
-          mr={3}
-          mt="2"
-          colorScheme="teal"
-          variant="solid"
-          size="sm"
-          onClick={onOpen}
-        >
+        <Button mr={3} mt="2" colorScheme="teal" variant="solid" size="sm" onClick={onOpen}>
           Kup bilet teraz
         </Button>
         <StripeModal

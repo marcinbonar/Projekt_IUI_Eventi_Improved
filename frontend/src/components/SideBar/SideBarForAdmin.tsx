@@ -27,13 +27,7 @@ import React, { ReactNode } from 'react';
 import { ReactText } from 'react';
 import { IconType } from 'react-icons';
 import { AiOutlineTool } from 'react-icons/ai';
-import {
-  FiBarChart2,
-  FiChevronDown,
-  FiDollarSign,
-  FiMenu,
-  FiUsers,
-} from 'react-icons/fi';
+import { FiBarChart2, FiChevronDown, FiDollarSign, FiMenu, FiUsers } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 
 import { ROUTE_CONSTANTS } from '../../constants/routesConstants';
@@ -69,19 +63,12 @@ const LinkItems: Array<LinkItemProps> = [
     route: ROUTE_CONSTANTS.SOLID_TICKETS_FOR_EVENTS,
   },
 ];
-export default function SidebarWithHeader({
-  children,
-}: {
-  children: ReactNode;
-}) {
+export default function SidebarWithHeader({ children }: { children: ReactNode }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   return (
     <Box minH="100vh" bg={useColorModeValue('gray.100', 'gray.900')}>
-      <SidebarContent
-        onClose={() => onClose}
-        display={{ base: 'none', md: 'block' }}
-      />
+      <SidebarContent onClose={() => onClose} display={{ base: 'none', md: 'block' }} />
       <Drawer
         autoFocus={false}
         isOpen={isOpen}
@@ -123,18 +110,14 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
         <Image
           src={colorMode === 'light' ? Logo : Logo1}
           alt="Logo"
-          w={
-            colorMode === 'light' ? { base: 50, md: 12 } : { base: 60, md: 14 }
-          }
-          h={
-            colorMode === 'light' ? { base: 30, md: 12 } : { base: 36, md: 14 }
-          }
+          w={colorMode === 'light' ? { base: 50, md: 12 } : { base: 60, md: 14 }}
+          h={colorMode === 'light' ? { base: 30, md: 12 } : { base: 36, md: 14 }}
           borderRadius={'3px'}
         />
 
         <CloseButton display={{ base: 'flex', md: 'none' }} onClick={onClose} />
       </Flex>
-      {LinkItems.map((link) => (
+      {LinkItems.map(link => (
         <NavItem key={link.name} icon={link.icon} route={link.route}>
           {link.name}
         </NavItem>
@@ -191,11 +174,13 @@ interface MobileProps extends FlexProps {
 
 const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
   const navigate = useNavigate();
+  const userDetailsString = sessionStorage.getItem('userDetails');
+  const userDetails = JSON.parse(userDetailsString!);
   const { colorMode, toggleColorMode } = useColorMode();
   const dispatch = useDispatch();
   const handleLogout = () => {
     dispatch(clearUserId()); // Wyczyść stan userId
-    sessionStorage.removeItem('userId')
+    sessionStorage.removeItem('userId');
     navigate(ROUTE_CONSTANTS.LOGIN);
   };
 
@@ -225,11 +210,7 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
         </Button>
         <Flex alignItems={'center'}>
           <Menu>
-            <MenuButton
-              py={2}
-              transition="all 0.3s"
-              _focus={{ boxShadow: 'none' }}
-            >
+            <MenuButton py={2} transition="all 0.3s" _focus={{ boxShadow: 'none' }}>
               <HStack>
                 <Avatar
                   size={'sm'}
@@ -243,7 +224,9 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
                   spacing="1px"
                   ml="2"
                 >
-                  <Text fontSize="sm">Jan Kowalski</Text>
+                  <Text fontSize="sm">
+                    {userDetails.name} {userDetails.surname}
+                  </Text>
                   <Text fontSize="xs" color="gray.600">
                     Admin
                   </Text>
@@ -257,9 +240,7 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
               bg={useColorModeValue('white', 'gray.900')}
               borderColor={useColorModeValue('gray.200', 'gray.700')}
             >
-              <MenuItem onClick={handleLogout}>
-                Wyloguj
-              </MenuItem>
+              <MenuItem onClick={handleLogout}>Wyloguj</MenuItem>
             </MenuList>
           </Menu>
         </Flex>

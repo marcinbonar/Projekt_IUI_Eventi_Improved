@@ -10,7 +10,6 @@ class StripeConfig {
 
   constructor() {
     const secretKey = process.env.STRIPE_SECRET_KEY;
-    console.log('secretKey', secretKey);
     if (!secretKey) {
       throw new Error('Klucz STRIPE_SECRET_KEY nie jest ustawiony w zmiennych środowiskowych');
     }
@@ -24,7 +23,7 @@ class StripeConfig {
     try {
       const charge = await this.stripe.charges.create({
         amount: Math.round(amount * 100),
-        currency: 'usd',
+        currency: 'PLN',
         description: 'Opłata za bilet',
         source: token,
       });

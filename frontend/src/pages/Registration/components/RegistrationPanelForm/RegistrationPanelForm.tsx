@@ -35,8 +35,7 @@ type FormValues = {
 const RegistrationPanelForm: FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  const [registerUser, { isLoading, isError, error }] =
-    useRegisterUserMutation();
+  const [registerUser, { isLoading, isError, error }] = useRegisterUserMutation();
   const {
     handleSubmit,
     register,
@@ -49,7 +48,7 @@ const RegistrationPanelForm: FC = () => {
 
   const onSubmit = async (data: FormValues) => {
     try {
-       await registerUser({
+      await registerUser({
         name: data.name,
         surname: data.surname,
         email: data.email,
@@ -63,8 +62,8 @@ const RegistrationPanelForm: FC = () => {
     } catch (error: any) {
       console.log('Błąd podczas rejestracji:', error);
       let message = 'Skontaktuj się z administratorem';
-      if (error.data) {
-        message = error.data;
+      if (error?.data?.message) {
+        message = error.data.message;
       }
       toastError({
         title: 'Błąd rejestracji',
@@ -76,12 +75,7 @@ const RegistrationPanelForm: FC = () => {
   return (
     <Stack spacing={5} mx={'auto'} maxW={'lg'} py={12} px={6}>
       <Stack align={'center'} />
-      <Box
-        rounded={'lg'}
-        bg={useColorModeValue('white', 'gray.700')}
-        boxShadow={'lg'}
-        p={8}
-      >
+      <Box rounded={'lg'} bg={useColorModeValue('white', 'gray.700')} boxShadow={'lg'} p={8}>
         <form onSubmit={handleSubmit(onSubmit)}>
           <Stack spacing={4}>
             <Heading color={'black'} fontSize={'4xl'} textAlign={'center'}>
@@ -92,18 +86,14 @@ const RegistrationPanelForm: FC = () => {
                 <FormControl id="name">
                   <FormLabel>Imię</FormLabel>
                   <Input type="text" {...register('name')} />
-                  {errors.name && (
-                    <Text color="red">{errors.name.message}</Text>
-                  )}
+                  {errors.name && <Text color="red">{errors.name.message}</Text>}
                 </FormControl>
               </Box>
               <Box>
                 <FormControl id="lastName">
                   <FormLabel>Nazwisko</FormLabel>
                   <Input type="text" {...register('surname')} />
-                  {errors.surname && (
-                    <Text color="red">{errors.surname.message}</Text>
-                  )}
+                  {errors.surname && <Text color="red">{errors.surname.message}</Text>}
                 </FormControl>
               </Box>
             </HStack>
@@ -115,51 +105,38 @@ const RegistrationPanelForm: FC = () => {
             <FormControl id="password">
               <FormLabel>Hasło</FormLabel>
               <InputGroup>
-                <Input
-                  type={showPassword ? 'text' : 'password'}
-                  {...register('password')}
-                />
+                <Input type={showPassword ? 'text' : 'password'} {...register('password')} />
                 <InputRightElement h={'full'}>
                   <Button
                     variant={'ghost'}
-                    onClick={() =>
-                      setShowPassword((showPassword) => !showPassword)
-                    }
+                    onClick={() => setShowPassword(showPassword => !showPassword)}
                   >
                     {showPassword ? <ViewIcon /> : <ViewOffIcon />}
                   </Button>
                 </InputRightElement>
               </InputGroup>
-              {errors.password && (
-                <Text color="red">{errors.password.message}</Text>
-              )}
+              {errors.password && <Text color="red">{errors.password.message}</Text>}
             </FormControl>
             <FormControl id="confirmPassword">
               <FormLabel>Potwierdź hasło</FormLabel>
               <InputGroup>
-                <Input
-                  type={showPassword ? 'text' : 'password'}
-                  {...register('confirmPassword')}
-                />
+                <Input type={showPassword ? 'text' : 'password'} {...register('confirmPassword')} />
                 <InputRightElement h={'full'}>
                   <Button
                     variant={'ghost'}
-                    onClick={() =>
-                      setShowPassword((showPassword) => !showPassword)
-                    }
+                    onClick={() => setShowPassword(showPassword => !showPassword)}
                   >
                     {showPassword ? <ViewIcon /> : <ViewOffIcon />}
                   </Button>
                 </InputRightElement>
               </InputGroup>
-              {errors.confirmPassword && (
-                <Text color="red">{errors.confirmPassword.message}</Text>
-              )}
+              {errors.confirmPassword && <Text color="red">{errors.confirmPassword.message}</Text>}
             </FormControl>
             <Stack spacing={5} pt={2}>
               <Button
                 type="submit"
                 loadingText="Trwa przetwarzanie"
+                isLoading={isLoading}
                 size="lg"
                 bg={'blue.400'}
                 color={'white'}
@@ -173,7 +150,9 @@ const RegistrationPanelForm: FC = () => {
             <Stack pt={6}>
               <Text align={'center'}>
                 Jesteś już zarejestrowany?{' '}
-                <Link color={'blue.400'}>Zaloguj się</Link>
+                <Link color={'blue.400'} onClick={() => navigate(ROUTE_CONSTANTS.LOGIN)}>
+                  Zaloguj się
+                </Link>
               </Text>
             </Stack>
           </Stack>

@@ -8,7 +8,6 @@ import { NextFunction, Request, Response } from 'express';
 import mongoose from 'mongoose';
 
 class Auth {
-  //działa-zgodność po stronie frontu
   async login(req: Request, res: Response, next: NextFunction) {
     try {
       const { email, password } = req.body;
@@ -42,7 +41,6 @@ class Auth {
     }
   }
 
-  //działa-zgodność po stronie frontu
   async register(req: Request, res: Response, next: NextFunction) {
     try {
       const { email, password, name, surname } = req.body;
@@ -73,7 +71,6 @@ class Auth {
     const { idToken } = req.body;
 
     try {
-      // Verify the token
       const ticket = await client.verifyIdToken({
         idToken: idToken,
         audience: process.env.GOOGLE_CLIENT_ID,
@@ -89,7 +86,6 @@ class Auth {
 
       if (!user) {
         user = new UserData({
-          userId: new mongoose.Types.ObjectId().toString(),
           email: payload.email,
           name: payload.given_name || 'Nieznane',
           surname: payload.family_name || 'Nieznane',
@@ -100,7 +96,7 @@ class Auth {
       }
 
       const tokenPayload = {
-        userId: user.userId,
+        userId: user._id,
         role: user.role,
         name: user.name,
         surname: user.surname,
@@ -114,28 +110,23 @@ class Auth {
     }
   }
 
-  //działa-zgodność po stronie frontu
   async changePassword(req: Request, res: Response, next: NextFunction) {
     const { oldPassword, newPassword } = req.body;
     const { userId: _id } = req.params;
 
     try {
-      // Znalezienie użytkownika na podstawie userId
       const user = await UserData.findById(_id);
       if (!user) {
         return res.status(403).send({ message: ALERTS.USER_NOT_FOUND });
       }
 
-      // Weryfikacja poprawności starego hasła
       const isPasswordValid = await getComparePassword(oldPassword, user.password);
       if (!isPasswordValid) {
         return res.status(403).send({ message: ALERTS.CURRENT_PASSWORD_INCORRECT });
       }
 
-      // Hashowanie nowego hasła
       const hashedNewPassword = await getHashPassword(newPassword);
 
-      // Aktualizacja hasła użytkownika
       await UserData.findByIdAndUpdate(user._id, { password: hashedNewPassword });
 
       res.status(200).send({ message: ALERTS.PASSWORD_UPDATED_SUCCESSFULLY });

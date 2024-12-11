@@ -2,9 +2,8 @@ import { jsPDF } from 'jspdf';
 import Logo from './Logo.png';
 import JsBarcode from 'jsbarcode';
 
-
 const useGenerateTicket = () => {
-  const generateTicket = (event: any, ticketWidth: number, ticketHeight: number) => {
+  const generateTicket = (event: any, ticketWidth: any, ticketHeight: any) => {
     const doc = new jsPDF();
 
     // Ticket background
@@ -24,9 +23,9 @@ const useGenerateTicket = () => {
     // Ticket title
     doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
-    doc.text(`Bilet na ${event.title}`, ticketWidth - 14, 30, {
-      align: 'right',
-    });
+    const title = `Bilet na ${event.title}`;
+    const titleX = ticketWidth / 2;
+    doc.text(title, titleX, 30, { align: 'center' });
 
     // Separator line
     doc.setLineWidth(0.5);
@@ -35,47 +34,52 @@ const useGenerateTicket = () => {
     // Event details
     doc.setFontSize(14);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Data rozpoczęcia: ${event.startDate}`, 15, 50);
-    doc.text(`Data zakończenia: ${event.endDate}`, 15, 60);
-    doc.text(`Lokalizacja: ${event.location}`, 15, 70);
-    doc.text(`Kategoria: ${event.category}`, 15, 80);
+    const detailStartX = 15;
+    const maxTextWidth = ticketWidth - 30; // Leave margins
+
+    const startDateText = `Data rozpoczęcia: ${event.startDate}`;
+    const endDateText = `Data zakończenia: ${event.endDate}`;
+    const locationText = `Lokalizacja: ${event.location}`;
+    const categoryText = `Kategoria: ${event.category}`;
+
+    doc.text(doc.splitTextToSize(startDateText, maxTextWidth), detailStartX, 50);
+    doc.text(doc.splitTextToSize(endDateText, maxTextWidth), detailStartX, 60);
+    doc.text(doc.splitTextToSize(locationText, maxTextWidth), detailStartX, 70);
+    doc.text(doc.splitTextToSize(categoryText, maxTextWidth), detailStartX, 80);
 
     // Payment status
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    if (
-      ['PAID_ONLINE', 'PAID_OFFLINE'].includes(event.paymentStatus)
-    ) {
-      doc.setTextColor(0, 184, 113); // Green color
-      doc.text('Oplacono', ticketWidth - 30, 90, { align: 'right' });
-    } else if (event.paymentStatus === 'PENDING_OFFLINE_PAYMENT') {
-      doc.setTextColor(255, 0, 0); // Red color
-      doc.text('Nieoplacono', ticketWidth - 30, 90, { align: 'right' });
-    }
+    const paymentText =
+      event.paymentStatus === 'PAID_ONLINE' || event.paymentStatus === 'PAID_OFFLINE'
+        ? 'Oplacono'
+        : 'Nieoplacono';
+    doc.setTextColor(
+      event.paymentStatus === 'PAID_ONLINE' || event.paymentStatus === 'PAID_OFFLINE' ? 0 : 255,
+      event.paymentStatus === 'PAID_ONLINE' || event.paymentStatus === 'PAID_OFFLINE' ? 184 : 0,
+      event.paymentStatus === 'PAID_ONLINE' || event.paymentStatus === 'PAID_OFFLINE' ? 113 : 0
+    );
+    doc.text(paymentText, ticketWidth - 30, 90, { align: 'right' });
 
+    // Reset text color
     doc.setTextColor(0, 0, 0);
 
     // Barcode
-    const barcodeX = ticketWidth / 2 - 25;
-    const barcodeY = ticketHeight - 15;
-    const barcodeWidth = 50;
-    const barcodeHeight = 10;
     const canvas = document.createElement('canvas');
     JsBarcode(canvas, event.eventId, {
       format: 'CODE128',
       displayValue: false,
+      width: 2,
+      height: 30,
+      margin: 0,
     });
-    const barcodeData = canvas.toDataURL('image/jpeg', 1.0);
-    doc.addImage(
-      barcodeData,
-      'JPEG',
-      barcodeX,
-      barcodeY,
-      barcodeWidth,
-      barcodeHeight,
-    );
+    const barcodeData = canvas.toDataURL('image/png');
+    const barcodeX = ticketWidth / 2 - 40;
+    const barcodeY = ticketHeight - 40;
+    doc.addImage(barcodeData, 'PNG', barcodeX, barcodeY, 80, 20);
 
-    doc.save(`Bilet na ${event.title}.pdf`);
+    // Save ticket as PDF
+    doc.save(`Bilet_na_${event.title}.pdf`);
   };
 
   return { generateTicket };

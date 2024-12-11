@@ -1,6 +1,6 @@
-import { Container, SimpleGrid } from '@chakra-ui/react';
-import styled from '@emotion/styled';
 import React, { FC, useEffect } from 'react';
+import { Container, SimpleGrid, Spinner, Center, Text } from '@chakra-ui/react';
+import styled from '@emotion/styled';
 import ReactPaginate from 'react-paginate';
 
 import SideBar from '../../components/SideBar/SideBar';
@@ -8,7 +8,6 @@ import usePagination from '../../hooks/usePagination';
 import { useGetUserEventsQuery } from '../../redux/event/eventsApi';
 import { IEvent } from '../../types/event';
 import EventCard from './components/EventCard/EventCard';
-
 
 const PaginationWrapper = styled.div`
   .pagination {
@@ -56,23 +55,31 @@ const EventsList: FC = () => {
     return () => clearInterval(intervalId);
   }, [refetch]);
 
-  if (isLoading) return <div>Is Loading</div>;
-
+  if (isLoading) {
+    return (
+      <SideBar>
+        <Center py={6}>
+          <Spinner size="xl" color="teal.500" />
+          <Text fontSize="xl" ml={4}>
+            Ładowanie wydarzeń...
+          </Text>
+        </Center>
+      </SideBar>
+    );
+  }
 
   return (
     <SideBar>
-      <Container maxW='container.xl' p={4} aria-label='Table'>
+      <Container maxW="container.xl" p={4} aria-label="Table">
         <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={10}>
-          {currentRecords?.map((event) => (
-            <EventCard key={event._id} event={event} />
-          ))}
+          {currentRecords?.map(event => <EventCard key={event._id} event={event} />)}
         </SimpleGrid>
         <PaginationWrapper>
           <ReactPaginate
             previousLabel={'Poprzednia'}
             nextLabel={'Następna'}
             breakLabel={'...'}
-            pageCount={Math.ceil(currentRecords?.length ?? 0 / 6)}
+            pageCount={Math.ceil((eventsData?.length ?? 0) / 6)}
             marginPagesDisplayed={1}
             pageRangeDisplayed={5}
             onPageChange={onNextPage}
