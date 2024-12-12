@@ -34,7 +34,8 @@ import { ROUTE_CONSTANTS } from '../../constants/routesConstants';
 import Logo1 from './components/LogoFolder/Logo1.png';
 import Logo from './components/LogoFolder/Logo.png';
 import { clearUserId } from '../../redux/user/userSlice';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../redux/store';
 
 interface LinkItemProps {
   name: string;
@@ -53,7 +54,7 @@ const LinkItems: Array<LinkItemProps> = [
     route: ROUTE_CONSTANTS.BLOCK_USERS,
   },
   {
-    name: 'Płatności offline',
+    name: 'Płatności w kiosku/kasie',
     icon: FiDollarSign,
     route: ROUTE_CONSTANTS.ALL_EVENTS_USERS,
   },
@@ -174,13 +175,13 @@ interface MobileProps extends FlexProps {
 
 const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
   const navigate = useNavigate();
-  const userDetailsString = sessionStorage.getItem('userDetails');
-  const userDetails = JSON.parse(userDetailsString!);
+  const userDetails = useSelector((state: RootState) => state.user.userDetails);
+
   const { colorMode, toggleColorMode } = useColorMode();
   const dispatch = useDispatch();
   const handleLogout = () => {
-    dispatch(clearUserId()); // Wyczyść stan userId
-    sessionStorage.removeItem('userId');
+    dispatch(clearUserId());
+    sessionStorage.removeItem('authorization');
     navigate(ROUTE_CONSTANTS.LOGIN);
   };
 
@@ -225,7 +226,7 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
                   ml="2"
                 >
                   <Text fontSize="sm">
-                    {userDetails.name} {userDetails.surname}
+                    {userDetails?.name} {userDetails?.surname}
                   </Text>
                   <Text fontSize="xs" color="gray.600">
                     Admin

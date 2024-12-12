@@ -29,6 +29,7 @@ class Auth {
       const tokenPayload = {
         userId: user._id,
         role: user.role,
+        email: user.email,
         name: user.name,
         surname: user.surname,
       };

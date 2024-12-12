@@ -50,18 +50,6 @@ const LoginPanelForm: FC = () => {
 
         const decoded: any = jwtDecode(token);
 
-        sessionStorage.setItem(
-          'userDetails',
-          JSON.stringify({
-            userId: decoded.userId,
-            name: decoded.name,
-            surname: decoded.surname,
-            role: decoded.role,
-          })
-        );
-
-        sessionStorage.setItem('userId', decoded.userId);
-
         dispatch(setUserId(decoded.userId));
         dispatch(setUserDetails(decoded));
 
@@ -109,23 +97,8 @@ const LoginPanelForm: FC = () => {
     try {
       const response: any = await loginUser(data).unwrap();
       const { token } = response;
-
       sessionStorage.setItem('authorization', token);
-
       const decoded: any = jwtDecode(token);
-
-      sessionStorage.setItem(
-        'userDetails',
-        JSON.stringify({
-          userId: decoded.userId,
-          name: decoded.name,
-          surname: decoded.surname,
-          role: decoded.role,
-        })
-      );
-      sessionStorage.setItem('userId', decoded.userId);
-
-      console.log('userId', sessionStorage.getItem('userId'));
 
       dispatch(setUserId(decoded.userId));
       dispatch(setUserDetails(decoded));

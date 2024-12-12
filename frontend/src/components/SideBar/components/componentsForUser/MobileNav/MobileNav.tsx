@@ -29,13 +29,11 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
   const navigate = useNavigate();
   const { colorMode, toggleColorMode } = useColorMode();
   const dispatch = useDispatch();
-  //const userId = useSelector((state: RootState) => state.user.userId);
-  const userDetailsString = sessionStorage.getItem('userDetails');
-  const userDetails = JSON.parse(userDetailsString!);
+  const userDetails = useSelector((state: RootState) => state.user.userDetails);
 
   const handleLogout = () => {
     dispatch(clearUserId());
-    sessionStorage.removeItem('userId');
+    sessionStorage.removeItem('authorization');
     navigate(ROUTE_CONSTANTS.LOGIN);
   };
 
@@ -75,10 +73,10 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
                 >
                   <Text fontSize="sm">
                     {' '}
-                    {userDetails.name} {userDetails.surname}
+                    {userDetails?.name} {userDetails?.surname}
                   </Text>
                   <Text fontSize="xs" color="gray.600">
-                    {userDetails.email}
+                    {userDetails?.email}
                   </Text>
                 </VStack>
                 <Box display={{ base: 'none', md: 'flex' }}>
